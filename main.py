@@ -1,4 +1,4 @@
-from fastapi import FastAPI
+from fastapi import FastAPI, Body
 
 recipes = [
     {"id": 1,
@@ -33,11 +33,54 @@ def get_recepies():
     return recipes
 
 @app.get('/recipe/{id}', tags = ['recipe'])
-def get_recepies(id: int):
-    recipe = [recipe for recipe in recipes if recipe["id"] == id]
+def get_recipes(id: int):
+    recipe = [item for item in recipes if item["id"] == id]
     return recipe
 
 @app.get('/recipes/', tags=['recipes'])
 def get_recipes_by_category(category: str):
-    recipes_by_category = [recipe for recipe in recipes if recipe["category"] == category]
+    recipes_by_category = [items for items in recipes if items["category"] == category]
     return recipes_by_category
+
+@app.post('/recipes', tags=['recipes'])
+def create_recipe(id: int = Body(), title: str = Body(), ingredients: list = Body(), preparation: str = Body(), category: str = Body(), category_id: int = Body()):
+    recipes.append({
+        "id": id,
+        "title": title,
+        "ingredients": ingredients,
+        "preparation": preparation,
+        "category": category,
+        "category_id": category_id
+    })
+    return recipes
+
+@app.put('/recipe/{id}', tags = ['recipe'])
+def update_recipe(id: int, title: str = Body(), ingredients: list = Body(), preparation: str = Body(), category: str = Body(), category_id: int = Body()):
+
+    # recipe = [item for item in recipes if item["id"] == id]
+    # if recipe_keys in recipe[0].keys():
+    #     recipe[0].update({recipe_keys:change})
+
+    for item in recipes:
+        if item["id"] == id:
+            item.update({
+            "title": title,
+            "ingredients": ingredients,
+            "preparation": preparation,
+            "category": category,
+            "category_id": category_id
+            })
+        else:
+            return "The recipe does not exist"
+
+           
+    return recipes
+
+@app.delete('/recipe/{id}', tags = ['recipe'])
+def del_recipe(id: int):
+    for item in recipes:
+        if item["id"] == id:
+            deleted = item["title"]
+            recipes.remove(item)
+    
+    return f"the recipe {deleted} has been deleted"
