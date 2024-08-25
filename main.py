@@ -1,4 +1,15 @@
 from fastapi import FastAPI, Body
+from pydantic import BaseModel
+from typing import Optional
+
+class Recipe(BaseModel):
+    id: Optional[int] = None
+    title: str
+    ingredients: list
+    preparation: str
+    category: str
+    category_id: str
+
 
 recipes = [
     {"id": 1,
@@ -35,46 +46,42 @@ def get_recepies():
 @app.get('/recipe/{id}', tags = ['recipe'])
 def get_recipes(id: int):
     recipe = [item for item in recipes if item["id"] == id]
-    return recipe
+    if recipe:
+        return recipe
+    else:
+        return "The recipe does not exist"
 
 @app.get('/recipes/', tags=['recipes'])
 def get_recipes_by_category(category: str):
     recipes_by_category = [items for items in recipes if items["category"] == category]
-    return recipes_by_category
+    if recipes_by_category:
+        return recipes_by_category
+    else:
+        return f"The category {category} does not exist"
 
 @app.post('/recipes', tags=['recipes'])
-def create_recipe(id: int = Body(), title: str = Body(), ingredients: list = Body(), preparation: str = Body(), category: str = Body(), category_id: int = Body()):
-    recipes.append({
-        "id": id,
-        "title": title,
-        "ingredients": ingredients,
-        "preparation": preparation,
-        "category": category,
-        "category_id": category_id
-    })
+def create_recipe(recipe: Recipe):
+    recipes.append(recipe)
     return recipes
 
 @app.put('/recipe/{id}', tags = ['recipe'])
-def update_recipe(id: int, title: str = Body(), ingredients: list = Body(), preparation: str = Body(), category: str = Body(), category_id: int = Body()):
-
-    # recipe = [item for item in recipes if item["id"] == id]
-    # if recipe_keys in recipe[0].keys():
-    #     recipe[0].update({recipe_keys:change})
+def update_recipe(id: int, recipe: Recipe):
 
     for item in recipes:
         if item["id"] == id:
             item.update({
-            "title": title,
-            "ingredients": ingredients,
-            "preparation": preparation,
-            "category": category,
-            "category_id": category_id
+            "id": recipe.id,
+            "title": recipe.title,
+            "ingredients": recipe.ingredients,
+            "preparation": recipe.preparation,
+            "category": recipe.category,
+            "category_id": recipe.category_id
             })
+            return recipes
         else:
             return "The recipe does not exist"
-
-           
-    return recipes
+        
+    
 
 @app.delete('/recipe/{id}', tags = ['recipe'])
 def del_recipe(id: int):
@@ -82,5 +89,7 @@ def del_recipe(id: int):
         if item["id"] == id:
             deleted = item["title"]
             recipes.remove(item)
+            return f"the recipe {deleted} has been deleted"
+        else:
+            return "The recipe does not exist"
     
-    return f"the recipe {deleted} has been deleted"
