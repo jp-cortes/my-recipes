@@ -1,14 +1,26 @@
-from fastapi import FastAPI, Body
-from pydantic import BaseModel
+from fastapi import FastAPI, Body, Path, Query
+from pydantic import BaseModel, Field, PrivateAttr
 from typing import Optional
 
 class Recipe(BaseModel):
     id: Optional[int] = None
-    title: str
-    ingredients: list
-    preparation: str
-    category: str
-    category_id: str
+    title: str = Field(min_length=5)
+    ingredients: list = Field(min_length=5)
+    preparation: str = Field(min_length=15)
+    category: str = Field(min_length=5)
+    category_id: int = Field(ge=1, Le=100)
+
+    class Config:
+        json_schema_extra = {
+            "example": {
+                "id": 0,
+                "title": "Salad",
+                "ingredients": ["tomato"],
+                "preparation": "Cut in brunoise",
+                "category": "Vegetarian",
+                "category_id": 2
+            }
+        }
 
 
 recipes = [
@@ -44,7 +56,7 @@ def get_recepies():
     return recipes
 
 @app.get('/recipe/{id}', tags = ['recipe'])
-def get_recipes(id: int):
+def get_recipes(id: int = Path(ge=1, Le=2000)):
     recipe = [item for item in recipes if item["id"] == id]
     if recipe:
         return recipe
@@ -52,7 +64,7 @@ def get_recipes(id: int):
         return "The recipe does not exist"
 
 @app.get('/recipes/', tags=['recipes'])
-def get_recipes_by_category(category: str):
+def get_recipes_by_category(category: str = Query(min_length=5)):
     recipes_by_category = [items for items in recipes if items["category"] == category]
     if recipes_by_category:
         return recipes_by_category
@@ -84,7 +96,7 @@ def update_recipe(id: int, recipe: Recipe):
     
 
 @app.delete('/recipe/{id}', tags = ['recipe'])
-def del_recipe(id: int):
+def del_recipe(id: int = Path(ge=1, Le=2000)):
     for item in recipes:
         if item["id"] == id:
             deleted = item["title"]
