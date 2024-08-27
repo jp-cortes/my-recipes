@@ -1,11 +1,12 @@
 from fastapi import FastAPI, Body, Path, Query
+from fastapi.responses import JSONResponse
 from pydantic import BaseModel, Field, PrivateAttr
 from typing import Optional
 
 class Recipe(BaseModel):
-    id: Optional[int] = None
+    id: Optional[int] = Field(ge=1)
     title: str = Field(min_length=5)
-    ingredients: list = Field(min_length=5)
+    ingredients: list = Field(min_length=3)
     preparation: str = Field(min_length=15)
     category: str = Field(min_length=5)
     category_id: int = Field(ge=1, Le=100)
@@ -15,8 +16,8 @@ class Recipe(BaseModel):
             "example": {
                 "id": 0,
                 "title": "Salad",
-                "ingredients": ["tomato"],
-                "preparation": "Cut in brunoise",
+                "ingredients": ["tomato", "cucumber", "smoked pepper"],
+                "preparation": "Cut all the ingredients in brunoise",
                 "category": "Vegetarian",
                 "category_id": 2
             }
@@ -51,34 +52,35 @@ def message():
     return "Welcome to my recipes"
 
 # endpoint for all recipes
-@app.get('/all', tags = ['recipes'])
-def get_recepies():
-    return recipes
+@app.get('/all', tags = ['recipes'], response_model=list[Recipe])
+def get_recepies() -> list[Recipe]:
+    return JSONResponse(content=recipes)
 
-@app.get('/recipe/{id}', tags = ['recipe'])
-def get_recipes(id: int = Path(ge=1, Le=2000)):
+@app.get('/recipe/{id}', tags = ['recipe'], response_model=Recipe)
+def get_one(id: int = Path(ge=1, Le=2000)) -> Recipe:
     recipe = [item for item in recipes if item["id"] == id]
     if recipe:
-        return recipe
+        return JSONResponse(content=recipe)
     else:
-        return "The recipe does not exist"
+        return JSONResponse(content={"message":"The recipe does not exist"})
 
 @app.get('/recipes/', tags=['recipes'])
 def get_recipes_by_category(category: str = Query(min_length=5)):
     recipes_by_category = [items for items in recipes if items["category"] == category]
     if recipes_by_category:
-        return recipes_by_category
+        return JSONResponse(content=recipes_by_category)
     else:
-        return f"The category {category} does not exist"
+        return JSONResponse(content={"message":f"The category {category} does not exist"})
 
-@app.post('/recipes', tags=['recipes'])
-def create_recipe(recipe: Recipe):
+@app.post('/recipes', tags=['recipes'], response_model=dict)
+def create_recipe(recipe: Recipe) -> dict:
+    title = recipe.title
     recipes.append(recipe)
-    return recipes
+    return JSONResponse(content={"message":f"the recipe {title} has been added"})
 
 @app.put('/recipe/{id}', tags = ['recipe'])
 def update_recipe(id: int, recipe: Recipe):
-
+     
     for item in recipes:
         if item["id"] == id:
             item.update({
@@ -89,9 +91,9 @@ def update_recipe(id: int, recipe: Recipe):
             "category": recipe.category,
             "category_id": recipe.category_id
             })
-            return recipes
+            return JSONResponse(content={"message":f"the recipe {recipe.title} has been updated"})
         else:
-            return "The recipe does not exist"
+            return JSONResponse(content={"message":"The recipe does not exist"})
         
     
 
@@ -101,7 +103,7 @@ def del_recipe(id: int = Path(ge=1, Le=2000)):
         if item["id"] == id:
             deleted = item["title"]
             recipes.remove(item)
-            return f"the recipe {deleted} has been deleted"
+            return JSONResponse(content={"messsage":f"the recipe {deleted} has been deleted"})
         else:
-            return "The recipe does not exist"
+            return JSONResponse(content={"message":"The recipe does not exist"})
     
