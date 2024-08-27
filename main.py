@@ -1,6 +1,6 @@
-from fastapi import FastAPI, Body, Path, Query
+from fastapi import FastAPI, Body, Path, Query, status
 from fastapi.responses import JSONResponse
-from pydantic import BaseModel, Field, PrivateAttr
+from pydantic import BaseModel, Field
 from typing import Optional, List
 
 class Recipe(BaseModel):
@@ -53,33 +53,37 @@ def message():
 
 # endpoint for all recipes
 @app.get('/all', tags = ['recipes'], response_model=List[Recipe])
-def get_recepies() -> List[Recipe]:
-    return JSONResponse(content=recipes)
+def get_recipes() -> List[Recipe]:
+    return JSONResponse(content=recipes, status_code=status.HTTP_200_OK)
 
+# endpoint to get one recipe
 @app.get('/recipe/{id}', tags = ['recipe'], response_model=Recipe)
 def get_one(id: int = Path(ge=1, Le=2000)) -> Recipe:
     recipe = [item for item in recipes if item["id"] == id]
     if recipe:
-        return JSONResponse(content=recipe)
+        return JSONResponse(content=recipe, status_code=status.HTTP_200_OK)
     else:
-        return JSONResponse(content={"message":"The recipe does not exist"})
+        return JSONResponse(content={"message":"The recipe does not exist"}, status_code=status.HTTP_404_NOT_FOUND)
 
-@app.get('/recipes/', tags=['recipes'])
-def get_recipes_by_category(category: str = Query(min_length=5)):
+# endpoint to get recipes by category
+@app.get('/recipes/', tags=['recipes'], response_model=List[Recipe])
+def get_recipes_by_category(category: str = Query(min_length=5)) -> List[Recipe]:
     recipes_by_category = [items for items in recipes if items["category"] == category]
     if recipes_by_category:
-        return JSONResponse(content=recipes_by_category)
+        return JSONResponse(content=recipes_by_category, status_code=status.HTTP_200_OK)
     else:
-        return JSONResponse(content={"message":f"The category {category} does not exist"})
+        return JSONResponse(content={"message":f"The category {category} does not exist"}, status_code=status.HTTP_404_NOT_FOUND)
 
-@app.post('/recipes', tags=['recipes'], response_model=dict)
+# endpoint to create recipes
+@app.post('/recipes', tags=['recipes'], response_model=dict, status_code=201)
 def create_recipe(recipe: Recipe) -> dict:
     title = recipe.title
     recipes.append(recipe.model_dump())
-    return JSONResponse(content={"message":f"the recipe {title} has been added"})
+    return JSONResponse(content={"message":f"the recipe {title} has been added"}, status_code=status.HTTP_201_CREATED)
 
-@app.put('/recipe/{id}', tags = ['recipe'])
-def update_recipe(id: int, recipe: Recipe):
+#endpoint to update recipes
+@app.put('/recipe/{id}', tags = ['recipe'], response_model=dict)
+def update_recipe(id: int, recipe: Recipe) -> dict:
      
     for item in recipes:
         if item["id"] == id:
@@ -91,19 +95,19 @@ def update_recipe(id: int, recipe: Recipe):
             "category": recipe.category,
             "category_id": recipe.category_id
             })
-            return JSONResponse(content={"message":f"the recipe {recipe.title} has been updated"})
+            return JSONResponse(content={"message":f"the recipe {recipe.title} has been updated"},status_code=status.HTTP_202_ACCEPTED)
         
-    return JSONResponse(content={"message":"The recipe does not exist"})
+    return JSONResponse(content={"message":"The recipe does not exist"}, status_code=status.HTTP_404_NOT_FOUND)
         
     
-
-@app.delete('/recipe/{id}', tags = ['recipe'])
-def del_recipe(id: int = Path(ge=1, Le=2000)):
+# endpoint to delete recipes
+@app.delete('/recipe/{id}', tags = ['recipe'], response_model=dict)
+def del_recipe(id: int = Path(ge=1, Le=2000)) -> dict:
     for item in recipes:
         if item["id"] == id:
             deleted = item["title"]
             recipes.remove(item)
-            return JSONResponse(content={"messsage":f"the recipe {deleted} has been deleted"})
+            return JSONResponse(content={"messsage":f"the recipe {deleted} has been deleted"}, status_code=status.HTTP_202_ACCEPTED)
         
-    return JSONResponse(content={"message":"The recipe does not exist"})
+    return JSONResponse(content={"message":"The recipe does not exist"}, status_code=status.HTTP_404_NOT_FOUND)
     
