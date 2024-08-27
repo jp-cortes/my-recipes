@@ -1,7 +1,7 @@
 from fastapi import FastAPI, Body, Path, Query
 from fastapi.responses import JSONResponse
 from pydantic import BaseModel, Field, PrivateAttr
-from typing import Optional
+from typing import Optional, List
 
 class Recipe(BaseModel):
     id: Optional[int] = Field(ge=1)
@@ -52,8 +52,8 @@ def message():
     return "Welcome to my recipes"
 
 # endpoint for all recipes
-@app.get('/all', tags = ['recipes'], response_model=list[Recipe])
-def get_recepies() -> list[Recipe]:
+@app.get('/all', tags = ['recipes'], response_model=List[Recipe])
+def get_recepies() -> List[Recipe]:
     return JSONResponse(content=recipes)
 
 @app.get('/recipe/{id}', tags = ['recipe'], response_model=Recipe)
@@ -75,7 +75,7 @@ def get_recipes_by_category(category: str = Query(min_length=5)):
 @app.post('/recipes', tags=['recipes'], response_model=dict)
 def create_recipe(recipe: Recipe) -> dict:
     title = recipe.title
-    recipes.append(recipe)
+    recipes.append(recipe.model_dump())
     return JSONResponse(content={"message":f"the recipe {title} has been added"})
 
 @app.put('/recipe/{id}', tags = ['recipe'])
@@ -92,8 +92,8 @@ def update_recipe(id: int, recipe: Recipe):
             "category_id": recipe.category_id
             })
             return JSONResponse(content={"message":f"the recipe {recipe.title} has been updated"})
-        else:
-            return JSONResponse(content={"message":"The recipe does not exist"})
+        
+    return JSONResponse(content={"message":"The recipe does not exist"})
         
     
 
@@ -104,6 +104,6 @@ def del_recipe(id: int = Path(ge=1, Le=2000)):
             deleted = item["title"]
             recipes.remove(item)
             return JSONResponse(content={"messsage":f"the recipe {deleted} has been deleted"})
-        else:
-            return JSONResponse(content={"message":"The recipe does not exist"})
+        
+    return JSONResponse(content={"message":"The recipe does not exist"})
     
