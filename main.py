@@ -1,8 +1,20 @@
-from fastapi import FastAPI, Body, Path, Query, status
+from fastapi import FastAPI, Body, Path, Query, status, Request, HTTPException, Depends
 from fastapi.responses import JSONResponse
 from pydantic import BaseModel, Field
 from typing import Optional, List
-from jwt_manager import create_token
+from jwt_manager import create_token, validate_token
+from fastapi.security import HTTPBearer
+
+app = FastAPI()
+app.title = "My recipes"
+app.version = "0.0.1"
+
+class JWTBearer(HTTPBearer):
+    async def __call__(self, request: Request):
+        auth = await super().__call__(request)
+        data = validate_token(auth.credentials)
+        if data["email"] != "user@mail.com":
+            raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Invalid credentials")
 
 class User(BaseModel):
     email: str
@@ -47,9 +59,6 @@ recipes = [
      },
 ]
 
-app = FastAPI()
-app.title = "My recipes"
-app.version = "0.0.1"
 
 # endpoint home
 @app.get('/', tags = ['home'])
@@ -64,7 +73,7 @@ def login(user: User):
         return JSONResponse(status_code=status.HTTP_200_OK, content=token)
 
 # endpoint for all recipes
-@app.get('/all', tags = ['recipes'], response_model=List[Recipe])
+@app.get('/all', tags = ['recipes'], response_model=List[Recipe], dependencies=[Depends(JWTBearer())])
 def get_recipes() -> List[Recipe]:
     return JSONResponse(content=recipes, status_code=status.HTTP_200_OK)
 
