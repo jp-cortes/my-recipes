@@ -2,6 +2,11 @@ from fastapi import FastAPI, Body, Path, Query, status
 from fastapi.responses import JSONResponse
 from pydantic import BaseModel, Field
 from typing import Optional, List
+from jwt_manager import create_token
+
+class User(BaseModel):
+    email: str
+    password: str
 
 class Recipe(BaseModel):
     id: Optional[int] = Field(ge=1)
@@ -50,6 +55,13 @@ app.version = "0.0.1"
 @app.get('/', tags = ['home'])
 def message():
     return "Welcome to my recipes"
+
+# enpoint to login user
+@app.post('/login', tags = ['auth'])
+def login(user: User):
+    if user.email == "user@mail.com" and user.password == "12345678":
+        token: str = create_token(user.__dict__)
+        return JSONResponse(status_code=status.HTTP_200_OK, content=token)
 
 # endpoint for all recipes
 @app.get('/all', tags = ['recipes'], response_model=List[Recipe])
