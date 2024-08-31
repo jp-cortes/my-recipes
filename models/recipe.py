@@ -6,20 +6,20 @@ class Recipe(Base):
 
     __tablename__ = "recipes"
 
-    id = Column(Integer, primary_key= True, autoincrement= True)
-    title = Column(str)
-    ingredients = Column(String)
+    id = Column(Integer, primary_key= True, autoincrement= True, unique= True, nullable= False)
+    title = Column(String)
+    ingredients = Column(JSON)
     preparation = Column(String)
-    category_id = Column(Integer, ForeignKey= "categories.id")
+    category_id = Column(Integer, ForeignKey("categories.id"))
     
-    category = relationship("Category", back_populates="belong_to")
+    category = relationship("Category", back_populates="recipes")
 
 
 class Category(Base):
 
     __tablename__ = "categories"
 
-    id = Column(Integer, primary_key= True, autoincrement= True)
-    title = Column(str)
+    id = Column(Integer, primary_key= True, autoincrement= True, unique= True, nullable= False)
+    title = Column(String)
 
-    belong_to = relationship("Recipe", back_populates="category")
+    recipes = relationship("Recipe", back_populates="category")
