@@ -7,7 +7,7 @@ class Recipe(Base):
     __tablename__ = "recipes"
 
     id = Column(Integer, primary_key= True, autoincrement= True, unique= True, nullable= False)
-    title = Column(String)
+    title = Column(String, unique= True)
     ingredients = Column(JSON)
     preparation = Column(String)
     category_id = Column(Integer, ForeignKey("categories.id"))
@@ -20,6 +20,6 @@ class Category(Base):
     __tablename__ = "categories"
 
     id = Column(Integer, primary_key= True, autoincrement= True, unique= True, nullable= False)
-    title = Column(String)
+    title = Column(String, unique= True)
 
     recipes = relationship("Recipe", back_populates="category")

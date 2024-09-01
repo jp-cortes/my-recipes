@@ -40,41 +40,35 @@ class User(BaseModel):
     password: str
 
 class Recipe(BaseModel):
-    # id: Optional[int] = Field(ge=1)
     title: str = Field(min_length=5)
     ingredients: list = Field(min_length=3)
     preparation: str = Field(min_length=15)
-    # category: str = Field(min_length=5)
     category_id: int = Field(ge=1, Le=100)
 
     class Config:
         json_schema_extra = {
             "example": {
-                # "id": 0,
-                "title": "Salad",
-                "ingredients": ["tomato", "cucumber", "smoked pepper"],
-                "preparation": "Cut all the ingredients in brunoise",
-                # "category": "Vegetarian",
+                "title": "bulgarian salad",
+                "ingredients": ["Tomato","cucumber","grounded white cheese", "smoked pepper", "olive oil", "apple cider vinnegar", "salt", "black pepper"],
+                "preparation": "chop the tomatoes, cucumber and the smoked pepper in dices not bigger than 1cm. In a bowl mix the olive oil, vinnegar, salt and back pepper, to make a vinnagrette. Mix all the ingredients and put the cheese on top.",
                 "category_id": 1
             }
         }
 
 
-recipes = [
+sample_recipes = [
     {"id": 1,
      "title": "bulgarian salad",
      "ingredients": ["Tomato","cucumber","grounded white cheese", "smoked pepper", "olive oil", "apple cider vinnegar", "salt", "black pepper"],
      "preparation":"chop the tomatoe, cucumber and the smoked pepper in dices not bigger than 1cm. In a bowl mix the olive oil, vinnegar, salt and back pepper, to make a vinnagrette. Mix all the ingredients and put the cheese on top.",
-     "category": "vegetarian",
-     "category_id": 2,
+     "category_id": 1,
      },
 
      {"id": 2,
      "title": "tarator",
      "ingredients": ["plane yogurt","cucumber", "dill", "fresh garlic", "chopped nuts", "salt", "black pepper"],
      "preparation":"chop the cucumber, garlic and dill. Mix all the ingredients and mixed with the yougurt. keep in the  fridge for 30 prior to serve on the table",
-     "category": "vegetarian",
-     "category_id": 2,
+     "category_id": 1,
      },
 ]
 
@@ -121,14 +115,14 @@ def get_one(id: int = Path(ge=1, Le=2000)) -> Recipe:
 
     return JSONResponse(content=jsonable_encoder(recipe), status_code=status.HTTP_200_OK)
 
-# endpoint to get recipes by category
-@app.get('/recipes/', tags=['recipes'], response_model=List[Recipe])
+# endpoint to get recipes by category name
+'''@app.get('/recipes/', tags=['recipes'], response_model=List[Recipe])
 def get_recipes_by_category(category: str = Query(min_length=1)) -> List[Recipe]:
-    recipes_by_category = [items for items in recipes if items["category"] == category]
+    recipes_by_category = [items for items in sample_recipes if items["category"] == category]
     if not recipes_by_category:
         return JSONResponse(content={"message":f"The category {category} does not exist"}, status_code=status.HTTP_404_NOT_FOUND)
     
-    return JSONResponse(content=recipes_by_category, status_code=status.HTTP_200_OK)
+    return JSONResponse(content=recipes_by_category, status_code=status.HTTP_200_OK)'''
     
 # endpoint to get recipes by category id
 @app.get('/recipes/category/{id}', tags=['recipes by category'], response_model=List[Recipe])
@@ -154,33 +148,41 @@ def create_recipe(recipe: Recipe) -> dict:
 
 #endpoint to update recipes
 @app.put('/recipe/{id}', tags = ['recipe'], response_model=dict)
-def update_recipe(id: int, recipe: Recipe) -> dict:
+def update_recipe(id: int, update: Recipe) -> dict:
      
-    # db = Session()
-    # recipe = db.query(RecipeModel).filter(RecipeModel.id == id).first()
+    db = Session()
+    recipe = db.query(RecipeModel).filter(RecipeModel.id == id).first()
 
-    for item in recipes:
-        if item["id"] == id:
-            item.update({
-            "id": recipe.id,
-            "title": recipe.title,
-            "ingredients": recipe.ingredients,
-            "preparation": recipe.preparation,
-            "category_id": recipe.category_id
-            })
-            return JSONResponse(content={"message":f"the recipe {recipe.title} has been updated"},status_code=status.HTTP_202_ACCEPTED)
+    if not recipe:
+        return JSONResponse(content={"message":"The recipe does not exist"}, status_code=status.HTTP_404_NOT_FOUND)
+    
+    recipe.title = update.title
+    recipe.ingredients = update.ingredients
+    recipe.preparation = update.preparation
+    recipe.category_id = update.category_id
+    
+    
+    db.commit()
+    db.refresh(recipe)
         
-    return JSONResponse(content={"message":"The recipe does not exist"}, status_code=status.HTTP_404_NOT_FOUND)
+    return JSONResponse(content={"message":f"the recipe {recipe.title} has been updated"},status_code=status.HTTP_202_ACCEPTED)
+        
         
     
 # endpoint to delete recipes
 @app.delete('/recipe/{id}', tags = ['recipe'], response_model=dict)
 def del_recipe(id: int = Path(ge=1, Le=2000)) -> dict:
-    for item in recipes:
-        if item["id"] == id:
-            deleted = item["title"]
-            recipes.remove(item)
-            return JSONResponse(content={"messsage":f"the recipe {deleted} has been deleted"}, status_code=status.HTTP_202_ACCEPTED)
+    db = Session()
+    recipe = db.query(RecipeModel).filter(RecipeModel.id == id).first()
+    
+    if not recipe:
+        return JSONResponse(content={"message":"The recipe does not exist"}, status_code=status.HTTP_404_NOT_FOUND)
+    
+    title = recipe.title
+
+    db.delete(recipe)
+    db.commit()
+
         
-    return JSONResponse(content={"message":"The recipe does not exist"}, status_code=status.HTTP_404_NOT_FOUND)
+    return JSONResponse(content={"messsage":f"the recipe {title} has been deleted"}, status_code=status.HTTP_202_ACCEPTED)
     
