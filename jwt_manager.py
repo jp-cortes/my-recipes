@@ -11,5 +11,13 @@ def create_token(data:dict) -> str:
     return token
 
 def validate_token(token: str) -> dict:
-    data: dict = decode(token, key=secret_key, algorithms=['HS256'])
+    data: dict = decode(token, key=secret_key, algorithms=["HS256"])
     return data
+
+def encode_password(data: str) -> str:
+    password: str = encode({"password": data}, key=secret_key, algorithm="HS256")
+    return password
+
+'''def decode_password(data: str) -> str:
+    password: str = decode(payload=data, key=secret_key, algorithm=["HS256"])
+    return password'''

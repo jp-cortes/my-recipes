@@ -3,11 +3,13 @@ from fastapi.responses import JSONResponse
 from fastapi.encoders import jsonable_encoder
 from pydantic import BaseModel, Field
 from typing import Optional, List
-from jwt_manager import create_token, validate_token
+from jwt_manager import create_token, validate_token, encode_password
 from fastapi.security import HTTPBearer
 from config.database import Session, engine, Base
+from utils.auth import validate_user
 from models.recipe import Recipe as RecipeModel
 from models.recipe import Category as CategoryModel
+from models.user import User as UserModel
 
 
 app = FastAPI()
@@ -78,13 +80,41 @@ sample_recipes = [
 def message():
     return "Welcome to my recipes"
 
-# enpoint to login user
+# endpoint to create users
+@app.post('/users', tags=['users'], response_model=dict, status_code=201)
+def create_user(user: User) -> dict:
+    
+    db = Session()
+    verify_user = db.query(UserModel).filter(UserModel.email == user.email).first()
+
+    if verify_user:
+        return JSONResponse(content={"message":"The user already have an account"}, status_code=status.HTTP_404_NOT_FOUND)
+    
+    hashed_password = encode_password(user.password)
+    newUser = UserModel(name= user.name, email= user.email, password=hashed_password)
+
+    db.add(newUser)
+    db.commit() 
+    db.refresh(newUser)
+    
+    return JSONResponse(content={"message":"the user has been added"}, status_code=status.HTTP_201_CREATED)
+
+
+# enpoint to login users
 @app.post('/login', tags = ['auth'])
 def login(user: User):
-    if user.email == "user@mail.com" and user.password == "12345678":
-        token: str = create_token(user.__dict__)
-        return JSONResponse(status_code=status.HTTP_200_OK, content=token)
     
+    db = Session()
+       
+    auth = validate_user(user, db, UserModel, encode_password)
+
+    if not auth:
+        token: str = create_token(user.__dict__)
+        return JSONResponse(status_code=status.HTTP_200_OK, content={"token": token})
+
+    return auth
+
+
 # endpoint to create categories
 @app.post('/categories', tags=['categories'], response_model=dict, status_code=201)
 def create_category(category: Category) -> dict:
@@ -96,6 +126,18 @@ def create_category(category: Category) -> dict:
     title = category.title
     # recipes.append(category.model_dump())
     return JSONResponse(content={"message":f"the category {title} has been added"}, status_code=status.HTTP_201_CREATED)
+
+
+# endpoint to get recipes by category id
+@app.get('/recipes/category/{id}', tags=['recipes by category'], response_model=List[Recipe])
+def get_recipes_by_category_id(id: int = Path(ge=1, Le=20)) -> List[Recipe]:
+    db = Session()
+    recipes_by_category = db.query(RecipeModel).filter(RecipeModel.category_id == id).all()
+    if not recipes_by_category:
+        return JSONResponse(content={"message":f"The category {id} does not exist"}, status_code=status.HTTP_404_NOT_FOUND)
+    
+    return JSONResponse(content=jsonable_encoder(recipes_by_category), status_code=status.HTTP_200_OK)
+
 
 # endpoint for all recipes
 @app.get('/all', tags = ['recipes'], response_model=List[Recipe], dependencies=[Depends(JWTBearer())])
@@ -124,15 +166,6 @@ def get_recipes_by_category(category: str = Query(min_length=1)) -> List[Recipe]
     
     return JSONResponse(content=recipes_by_category, status_code=status.HTTP_200_OK)'''
     
-# endpoint to get recipes by category id
-@app.get('/recipes/category/{id}', tags=['recipes by category'], response_model=List[Recipe])
-def get_recipes_by_category_id(id: int = Path(ge=1, Le=20)) -> List[Recipe]:
-    db = Session()
-    recipes_by_category = db.query(RecipeModel).filter(RecipeModel.category_id == id).all()
-    if not recipes_by_category:
-        return JSONResponse(content={"message":f"The category {id} does not exist"}, status_code=status.HTTP_404_NOT_FOUND)
-    
-    return JSONResponse(content=jsonable_encoder(recipes_by_category), status_code=status.HTTP_200_OK)
 
 # endpoint to create recipes
 @app.post('/recipes', tags=['recipes'], response_model=dict, status_code=201)
@@ -146,8 +179,9 @@ def create_recipe(recipe: Recipe) -> dict:
     # recipes.append(recipe.model_dump())
     return JSONResponse(content={"message":f"the recipe {title} has been added"}, status_code=status.HTTP_201_CREATED)
 
+
 #endpoint to update recipes
-@app.put('/recipe/{id}', tags = ['recipe'], response_model=dict)
+@app.put('/recipe/{id}', tags = ['recipe'], response_model=dict, dependencies=[Depends(JWTBearer())])
 def update_recipe(id: int, update: Recipe) -> dict:
      
     db = Session()

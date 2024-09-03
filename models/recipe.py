@@ -23,3 +23,6 @@ class Category(Base):
     title = Column(String, unique= True)
 
     recipes = relationship("Recipe", back_populates="category")
+
+
+    
