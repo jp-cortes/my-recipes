@@ -1,18 +1,12 @@
 from fastapi import APIRouter
-from fastapi import FastAPI, Body, Path, Query, status, Request, HTTPException, Depends
+from fastapi import Path, status, Depends
 from fastapi.responses import JSONResponse
 from fastapi.encoders import jsonable_encoder
 from pydantic import BaseModel, Field
-from typing import Optional, List
-from jwt_manager import create_token, validate_token, encode_password
-from fastapi.security import HTTPBearer
-from config.database import Session, engine, Base
-from middlewares.auth import validate_user
-from middlewares.jwt_bearer import JWTBearer
+from typing import List
+from config.database import Session
+from middlewares.jwt_bearer import JWTBearerAdmin, JWTBearerUser
 from models.recipe import Recipe as RecipeModel
-from models.recipe import Category as CategoryModel
-from models.user import User as UserModel
-
 
 
 recipe_router = APIRouter()
@@ -36,7 +30,7 @@ class Recipe(BaseModel):
 
 
 # endpoint for all recipes
-@recipe_router.get('/all', tags = ['recipes'], response_model=List[Recipe], dependencies=[Depends(JWTBearer())])
+@recipe_router.get('/all', tags = ['recipes'], response_model=List[Recipe])
 def get_recipes() -> List[Recipe]:
     db = Session()
     all_recipes = db.query(RecipeModel).all()
@@ -44,7 +38,7 @@ def get_recipes() -> List[Recipe]:
 
 
 # endpoint to get one recipe
-@recipe_router.get('/recipe/{id}', tags = ['recipe'], response_model=Recipe)
+@recipe_router.get('/recipe/{id}', tags = ['recipes'], response_model=Recipe, dependencies=[Depends(JWTBearerUser())])
 def get_one(id: int = Path(ge=1, Le=2000)) -> Recipe:
     db = Session()
     recipe = db.query(RecipeModel).filter(RecipeModel.id == id).first()
@@ -56,7 +50,7 @@ def get_one(id: int = Path(ge=1, Le=2000)) -> Recipe:
 
 
 # endpoint to get recipes by category id
-@recipe_router.get('/recipes/category/{id}', tags=['recipes by category'], response_model=List[Recipe])
+@recipe_router.get('/recipes/category/{id}', tags=['recipes'], response_model=List[Recipe])
 def get_recipes_by_category_id(id: int = Path(ge=1, Le=20)) -> List[Recipe]:
     db = Session()
     recipes_by_category = db.query(RecipeModel).filter(RecipeModel.category_id == id).all()
@@ -67,7 +61,7 @@ def get_recipes_by_category_id(id: int = Path(ge=1, Le=20)) -> List[Recipe]:
 
 
 # endpoint to create recipes
-@recipe_router.post('/recipes', tags=['recipes'], response_model=dict, status_code=201)
+@recipe_router.post('/recipes', tags=['recipes'], response_model=dict, dependencies=[Depends(JWTBearerUser())])
 def create_recipe(recipe: Recipe) -> dict:
     db = Session()
     newRecipe = RecipeModel(**recipe.model_dump())
@@ -75,12 +69,12 @@ def create_recipe(recipe: Recipe) -> dict:
     db.add(newRecipe)
     db.commit() 
     title = recipe.title
-    # recipes.append(recipe.model_dump())
+    
     return JSONResponse(content={"message":f"the recipe {title} has been added"}, status_code=status.HTTP_201_CREATED)
 
 
 #endpoint to update recipes
-@recipe_router.put('/recipe/{id}', tags = ['recipe'], response_model=dict, dependencies=[Depends(JWTBearer())])
+@recipe_router.put('/recipe/{id}', tags = ['recipes'], response_model=dict, dependencies=[Depends(JWTBearerAdmin())])
 def update_recipe(id: int, update: Recipe) -> dict:
      
     db = Session()
@@ -102,7 +96,7 @@ def update_recipe(id: int, update: Recipe) -> dict:
         
           
 # endpoint to delete recipes
-@recipe_router.delete('/recipe/{id}', tags = ['recipe'], response_model=dict)
+@recipe_router.delete('/recipe/{id}', tags = ['recipes'], response_model=dict, dependencies=[Depends(JWTBearerAdmin())])
 def del_recipe(id: int = Path(ge=1, Le=2000)) -> dict:
     db = Session()
     recipe = db.query(RecipeModel).filter(RecipeModel.id == id).first()
