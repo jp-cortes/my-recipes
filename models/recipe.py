@@ -14,15 +14,4 @@ class Recipe(Base):
     
     category = relationship("Category", back_populates="recipes")
 
-
-class Category(Base):
-
-    __tablename__ = "categories"
-
-    id = Column(Integer, primary_key= True, autoincrement= True, unique= True, nullable= False)
-    title = Column(String, unique= True)
-
-    recipes = relationship("Recipe", back_populates="category")
-
-
     
