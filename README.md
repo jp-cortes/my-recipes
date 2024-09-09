@@ -56,26 +56,26 @@ My Recipes API is a FastAPI project designed to manage a collection of recipes, 
 
   
 
-	bash```
+	```bash
   
 
-git clone https://github.com/your-username/my-recipes-api.git
+	git clone https://github.com/jp-cortes/my-recipes-api.git
 
-	cd my-recipes-api```
+
+	cd my-recipes-api
+	```
   
 
 2. Create a virtual environment:
 
   
 
-bash```
-
-
-  
+```bash
 
 python -m venv env
 
-source env/bin/activate # On Windows: `env\Scripts\activate` ```
+source env/bin/activate # On Windows: `env\Scripts\activate` 
+```
 
   
 
@@ -83,11 +83,10 @@ source env/bin/activate # On Windows: `env\Scripts\activate` ```
 
   
 
-bash```
+```bash  
 
-  
-
-pip install -r requirements.txt```
+pip install -r requirements.txt
+```
 
   
 
@@ -105,13 +104,12 @@ Run database migrations if applicable.
 
   
 
-bash```
+```bash
 
-uvicorn main:app --reload
+uvicorn main:app --reload  
 
-  
-
-The API will be available at http://127.0.0.1:8000. ```
+The API will be available at http://127.0.0.1:8000. 
+```
 
   
 
@@ -149,9 +147,7 @@ The API will be available at http://127.0.0.1:8000. ```
 
   
 
-json```
-
-  
+```json  
 
 {
 
@@ -163,7 +159,8 @@ json```
 
 "category_id": 1
 
-}```
+}
+```
 
   
 
@@ -173,9 +170,7 @@ json```
 
   
 
-json```
-
-  
+```json
 
 {
 
@@ -187,7 +182,8 @@ json```
 
 "role": "user" # Auto-assigned as "admin" for the first user
 
-}```
+}
+```
 
   
 
@@ -195,7 +191,8 @@ json```
 
   
 
-json``` {
+```json
+ {
 
 "title": "Salad",
 
@@ -207,17 +204,15 @@ json``` {
 
 "category_id": 1
 
-}```
+}
+```
 
   
 
 # Project Structure
   
 
-bash```
-```
-
-```
+```bash
 
 my-recipes-api/
 
@@ -240,4 +235,5 @@ my-recipes-api/
 ├── README.md # This file
 
 └── requirements.txt # Python dependencies
+
 ```
