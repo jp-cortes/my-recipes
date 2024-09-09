@@ -137,6 +137,8 @@ The API will be available at http://127.0.0.1:8000. ```
 
 * GET `/recipes/`: Retrieve all recipes.
 
+* GET `/recipes/category/{id}`: Retrieve recipes by category ID.
+
 * GET `/recipe/{id}`: Retrieve a single recipe by ID.
 
 * DELETE `/recipe/{id}`: Delete a recipe by ID.

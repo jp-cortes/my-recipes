@@ -14,7 +14,7 @@ user_router = APIRouter()
 
 
 # endpoint to create users
-@user_router.post('/users', tags=['users'], response_model=dict, status_code=201)
+@user_router.post('/register', tags=['users'], response_model=dict, status_code=201)
 def create_user(user: CreateUser) -> dict:
     
     db = Session()

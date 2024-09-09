@@ -23,7 +23,7 @@ def get_categories() -> List[Category]:
 
 
 # endpoint to create categories
-@category_router.post('/categories', tags=['categories'], response_model=dict, dependencies=[Depends(JWTBearerUser())])
+@category_router.post('/category', tags=['categories'], response_model=dict, dependencies=[Depends(JWTBearerUser())])
 def create_category(category: Category) -> dict:
     db = Session()
     verify_category = CategoryService(db).get_category_by_title(category.title)

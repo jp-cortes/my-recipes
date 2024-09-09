@@ -13,7 +13,7 @@ recipe_router = APIRouter()
 
 
 # endpoint for all recipes
-@recipe_router.get('/all', tags = ['recipes'], response_model=List[Recipe])
+@recipe_router.get('/recipes', tags = ['recipes'], response_model=List[Recipe])
 def get_recipes() -> List[Recipe]:
     db = Session()
     all_recipes = RecipeService(db).get_recipes()
@@ -55,7 +55,7 @@ def get_recipes_by_category(category: str = Query(min_length=1)) -> List[Recipe]
 
 
 # endpoint to create recipes
-@recipe_router.post('/recipes', tags=['recipes'], response_model=dict, dependencies=[Depends(JWTBearerUser())])
+@recipe_router.post('/recipe', tags=['recipes'], response_model=dict, dependencies=[Depends(JWTBearerUser())])
 def create_recipe(recipe: Recipe) -> dict:
     db = Session()
 
