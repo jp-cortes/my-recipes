@@ -8,6 +8,7 @@ class Recipe(Base):
 
     id = Column(Integer, primary_key= True, autoincrement= True, unique= True, nullable= False)
     title = Column(String, unique= True)
+    images = Column(JSON)
     ingredients = Column(JSON)
     preparation = Column(String)
     category_id = Column(Integer, ForeignKey("categories.id"))

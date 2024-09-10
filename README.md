@@ -153,6 +153,8 @@ The API will be available at http://127.0.0.1:8000.
 
 "title": "Greek Salad",
 
+"images": ["salad_01.png", "salad_02.png", "salad_03.png"],
+
 "ingredients": ["tomato", "cucumber", "feta", "olive oil"],
 
 "preparation": "Mix all ingredients and add olive oil.",
@@ -195,6 +197,8 @@ The API will be available at http://127.0.0.1:8000.
  {
 
 "title": "Salad",
+
+"images": ["salad_01.png", "salad_02.png", "salad_03.png"],
 
 "ingredients": ["tomato", "lettuce", "olive oil"],
 
