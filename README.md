@@ -220,19 +220,18 @@ The API will be available at http://127.0.0.1:8000.
 
 my-recipes-api/
 
-├── app/
 
 │ ├── main.py # FastAPI application setup
 
-│ ├── models.py # SQLAlchemy models (User, Recipe, Category)
+│ ├── models/ # SQLAlchemy models (User, Recipe, Category)
 
-│ ├── schemas.py # Pydantic models (CreateUser, CreateRecipe)
+│ ├── schemas/ # Pydantic models (User, Recipe, Category)
 
-│ ├── database.py # Database connection and setup
+│ ├── config/ # Database connection and setup will be genarated automatically after running the server for the first time
 
 │ ├── middlewares/ # Custom middleware (error handling, etc.)
 
-├── migrations/ # Database migrations
+│ ├── services/ # APi services
 
 ├── tests/ # Unit tests
 
