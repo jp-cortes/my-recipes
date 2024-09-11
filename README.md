@@ -125,6 +125,19 @@ The API will be available at http://127.0.0.1:8000.
 
   
 
+# Category Endpoints
+
+  
+
+* GET `/categories/`: Retrieve all categories.
+
+* POST `/category/`: Create a new category.
+
+* PUT `/category/{id}`: Update an existing category by ID.
+
+* GET `/category/{id}`: Retrieve a single category by ID.
+
+
 # Recipe Endpoints
 
   
@@ -140,7 +153,6 @@ The API will be available at http://127.0.0.1:8000.
 * GET `/recipe/{id}`: Retrieve a single recipe by ID.
 
 * DELETE `/recipe/{id}`: Delete a recipe by ID.
-
   
 
 # Example Request (Add Recipe)
